@@ -3,8 +3,10 @@ import { useState, useEffect} from "react";
 import { Checkers } from './Game';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCrown } from '@fortawesome/free-solid-svg-icons'
+import {io, socket} from "./socket";
 
 const init = new Checkers();
+socket.connect();
 
 function App() {
   const [active, setActive] = useState(null);
