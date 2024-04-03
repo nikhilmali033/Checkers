@@ -60,15 +60,20 @@ h6 {
 
 .game-piece {
   position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   z-index: 4;
   width: calc(100% - 10px);
   height: calc(100% - 10px);
   border-radius: 50%;
   background-color: rgb(201, 0, 0);
+  color: rgb(109, 0, 0);
 }
 
 .game-piece.black {
   background-color: rgb(49, 57, 88);
+  color: rgb(19, 22, 34)
 }
 
 .game-piece.movable {

@@ -1,6 +1,8 @@
 import './App.css';
 import { useState, useEffect} from "react";
 import { Checkers } from './Game';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faCrown } from '@fortawesome/free-solid-svg-icons'
 
 const init = new Checkers();
 
@@ -41,7 +43,10 @@ function App() {
                 <div onMouseDown={() => {handleSquareClick(x.coord, x.id)}} className={"game-square " + x.space_color + (active?.availableMoves.has(x.coord) ? ' move' : '')} key={x.id}>
                   <span className='coord'>{x.coord}</span>
                   {
-                    x.piece ? <div onMouseDown={(e) => {if(game.pieceTurn(x.piece)) activePiece(x.piece)}} className={"game-piece" + (game.pieceTurn(x.piece) ? ' movable' : '') + (game.pieces[x.piece].isBlack ? ' black' : '') + (active?.id === x.piece ? ' active' : '')}></div> : ""
+                    x.piece ? 
+                    <div onMouseDown={(e) => {if(game.pieceTurn(x.piece)) activePiece(x.piece)}} className={"game-piece" + (game.pieceTurn(x.piece) ? ' movable' : '') + (game.pieces[x.piece].isBlack ? ' black' : '') + (active?.id === x.piece ? ' active' : '')}>
+                      {game.pieces[x.piece].isKing ? <FontAwesomeIcon icon={faCrown} /> : ""}
+                    </div> : ""
                   }
                 </div>
               );
