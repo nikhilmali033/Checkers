@@ -12,9 +12,15 @@ function App() {
   const [game, setGame] = useState(init);
 
   const activePiece = (id) => {
+    if (active && active.id === id) {
+      setActive(null);
+      return;
+    }
+    const moves = game.getValidMoves(id);
     setActive({
       id,
-      availableMoves: game.getValidMoves(id)
+      availableMoves: moves.validMoves,
+      moveInfo: moves.moveInfo
     })
   };
 
@@ -25,7 +31,7 @@ function App() {
 
   const handleSquareClick = (coord, id) => {
     if (active && active.availableMoves.has(coord)) {
-      game.movePiece(id, active.id);
+      game.movePiece(id, active.id, active.moveInfo[coord]);
       setActive(null); // Reset active state after the move
     }
   };

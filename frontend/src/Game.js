@@ -45,33 +45,48 @@ export class Checkers {
     }
 
     checkSpace(x, y) {
-        return Object.values(this.pieces).find((p) => p.x === x && p.y === y);
-      }
+        let spaceId = x + y * 8;
+        let pieceId = this.board[spaceId].piece;
+        if (pieceId)
+            return this.pieces[pieceId];
+        return undefined;
+    }
     
     getValidMoves(id) {
         const p = this.pieces[id];
         let validMoves = new Set();
+        let moveInfo = {};
         let toCheck = p.isKing ? [{dx: 1, dy: 1}, {dx: -1, dy: -1}, {dx: 1, dy: -1}, {dx: -1, dy: -1}] : (p.isBlack ? [{dx: 1, dy: 1}, {dx: -1, dy: 1}] : [{dx: 1, dy: -1}, {dx: -1, dy: -1}]);
         toCheck.forEach((x) => {
           if (p.x + x.dx <= 7 && p.y + x.dy <= 7 && p.x + x.dx >= 0 && p.y + x.dy  >= 0) {
             const check = this.checkSpace(p.x + x.dx, p.y + x.dy);
             if (check != null) {
-              if (check.isBlack !== p.isBlack) {
-                if (p.x + (2 * x.dx) <= 7 && p.y + (2 * x.dy) <= 7 && p.x + (2 * x.dx) >= 0 && p.y + (2 * x.dy) >= 0) {
-                  if (this.checkSpace(p.x + (2 * x.dx), p.y + (2 * x.dy)) === undefined) {
-                    validMoves.add(`(${p.x + (2 * x.dx)}, ${p.y + (2 * x.dy)})`);
-                  }
+                //If is opponents piece
+                if (check.isBlack !== p.isBlack) {
+                    if (p.x + (2 * x.dx) <= 7 && p.y + (2 * x.dy) <= 7 && p.x + (2 * x.dx) >= 0 && p.y + (2 * x.dy) >= 0) {
+                        //If next diagonal space is empty
+                        if (this.checkSpace(p.x + (2 * x.dx), p.y + (2 * x.dy)) === undefined) {
+                            const move = `(${p.x + (2 * x.dx)}, ${p.y + (2 * x.dy)})`;
+                            validMoves.add(move);
+                            moveInfo[move] = {
+                                captures: [check.id],
+                            }
+                        }
+                    }
                 }
-              }
             } else {
-              validMoves.add(`(${p.x + x.dx}, ${p.y + x.dy})`);
+                const move = `(${p.x + x.dx}, ${p.y + x.dy})`;
+                validMoves.add(move);
+                moveInfo[move] = {
+                    captures: []
+                }
             }
           }
         });
-        return validMoves
+        return {validMoves, moveInfo}
     }
 
-    movePiece(space, id) {
+    movePiece(space, id, info) {
         const piece = this.pieces[id];
         const lastSpace = this.board.find((x) => x.piece === id);
         lastSpace.piece = null;
@@ -82,7 +97,16 @@ export class Checkers {
         this.board[space].piece = id;
         piece.x = this.board[space].x;
         piece.y = this.board[space].y;
+        if (piece.isBlack && piece.y === 7) piece.isKing = true;
+        else if (!piece.isBlack && piece.y === 0) piece.isKing = true;
         this.turn = this.turn === 0 ? 1 : 0;
+        if (info.captures.length !== 0) {
+            info.captures.forEach((x) => {
+                const space = this.board.find((s) => s.piece === x);
+                if (space) space.piece = null;
+                this.pieces[x].captured = true;
+            });
+        }
     }
 
     pieceTurn(id) {
