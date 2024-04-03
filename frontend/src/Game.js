@@ -6,7 +6,7 @@ export class Checkers {
     board = [];
     turn = 0; //black is 0, red is 1
 
-    constructor(board = [], pieces = {}) {
+    constructor(board = [], pieces = {}, turn = 0) {
         if (board.length === 0) {
             let sqrs = [];
             for (let i = 0; i < sqrCnt; i++) {
@@ -29,6 +29,7 @@ export class Checkers {
         } else {
             this.board = board;
             this.pieces = pieces;
+            this.turn = turn;
         }
     }
 
