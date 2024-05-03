@@ -112,11 +112,11 @@ class Board:
                     self.board[mid_row][mid_col].color == opponent_color and
                     self.board[new_row][new_col] is None):
 
-                    # Check if the movement direction is valid for the color -> only works if piece is not a king
+                    # Check if the movement direction is valid for the color -> only works if piece  not a king
                     if (color == 'red' and dr < 0) or (color == 'black' and dr > 0):
                         visited.add((new_row, new_col))
-                        if (row, col) in valid_moves:
-                            valid_moves.remove((row, col))
+                        if valid_moves: #forced jumps 
+                            valid_moves.clear()
                         valid_moves.append((new_row, new_col))
                         self.get_capturing_moves(piece, new_row, new_col, valid_moves, visited)
 
