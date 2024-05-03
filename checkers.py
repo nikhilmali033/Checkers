@@ -5,11 +5,7 @@ class Agent:
         self.color = color
 
     def move(self, board):
-        if self.color == "red":
-            print("Red player's turn")
-        else:
-            print("Black player's turn")
-
+        print(f"{self.color.capitalize()} player's turn")
         selected_piece = None
         valid_moves = []
 
@@ -26,34 +22,24 @@ class Agent:
 
                     if piece and piece.color == self.color:
                         if selected_piece == piece:
-                            board.select_piece(row, col)
-                            board.unhighlight_squares()
                             selected_piece = None
                             valid_moves = []
-                        else:
                             board.unhighlight_squares()
+                        else:
                             selected_piece = piece
                             valid_moves = board.get_valid_moves(piece)
+                            board.unhighlight_squares()
                             board.highlight_valid_moves(valid_moves)
-                    else:
-                        if selected_piece:
-                            if (row, col) in valid_moves:
-                                board.move_piece(selected_piece, (row, col))
-                                board.unhighlight_squares()
-                                return
-                            else:
-                                board.unhighlight_squares()
-                                selected_piece = None
-                                valid_moves = []
-
-    def __init__(self, color):
-        self.color = color
+                    elif selected_piece and (row, col) in valid_moves:
+                        board.move_piece(selected_piece, (row, col))
+                        board.unhighlight_squares()
+                        return
 
 class Piece:
     def __init__(self, color, position):
         self.color = color
         self.position = position
-        self.is_king = False
+        self.is_king = False 
 
     def make_king(self):
         self.is_king = True
@@ -109,7 +95,7 @@ class Board:
         #     pass
 
         return valid_moves
-    
+
     def get_capturing_moves(self, piece, row, col, valid_moves):
         color = piece.color
         opponent_color = "black" if color == "red" else "red"
@@ -152,6 +138,13 @@ class Board:
     def move_piece(self, piece, new_position):
         old_position = piece.position
         self.board[old_position[0]][old_position[1]] = None
+        # Calculate the position of the captured piece if it is a capturing move
+        if abs(new_position[0] - old_position[0]) == 2:
+            captured_row = (old_position[0] + new_position[0]) // 2
+            captured_col = (old_position[1] + new_position[1]) // 2
+            self.board[captured_row][captured_col] = None  # Remove the captured piece
+
+        # Place the piece in the new position
         self.board[new_position[0]][new_position[1]] = piece
         piece.position = new_position
 
