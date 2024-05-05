@@ -3,7 +3,7 @@ import numpy as np
 
 class Checkers:
     def __init__(self, p1, p2):
-        self.board = np.zeros((8,8))
+        self.board = np.zeros((8,8), dtype='U1')
         self.initialize_board()
         self.boardHash = None
         self.p1 = p1
@@ -14,7 +14,7 @@ class Checkers:
     def initialize_board(self):
         for i in range(8):
             for j in range(8):
-                isBlack = ((math.floor(i / 8) % 2 == 0 and (i % 8) % 2 == 0) or (math.floor(i / 8) % 2 == 1 and (i % 8) % 2 == 1))
+                isBlack = ((i % 2 == 0 and j % 2 == 0) or (i % 2 == 1 and j % 2 == 1))
                 if (i < 3 and isBlack):
                     self.board[i,j] = "B"
                 elif (i > 4 and isBlack):
@@ -35,7 +35,7 @@ class Checkers:
 
 def main():
     checker = Checkers(None, None)
-    print(self.getHash())
+    print(checker.board)
 
 if __name__ == "__main__":
     main()
