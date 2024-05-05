@@ -67,7 +67,6 @@ export class Checkers {
     from = null,
     capturedPieces = []
   ) {
-    let foundMoves = false;
     const p = this.pieces[id];
     const x = x0 === null ? p.x : x0;
     const y = y0 === null ? p.y : y0;
@@ -100,7 +99,11 @@ export class Checkers {
               //If next diagonal space is empty
               if (this.checkSpace(x2, y2) === undefined) {
                 const move = `(${x2}, ${y2})`;
-                const doubleCheck = this.getValidUpdated(
+                validMoves.add(move);
+                moveInfo[move] = {
+                  captures: [...capturedPieces, check.id],
+                };
+                this.getValidUpdated(
                   id,
                   x2,
                   y2,
@@ -109,16 +112,6 @@ export class Checkers {
                   { x: x2, y: y2 },
                   [...capturedPieces, check.id]
                 );
-                if (doubleCheck === null) {
-                  validMoves.add(move);
-                  moveInfo[move] = {
-                    captures: [...capturedPieces, check.id],
-                  };
-                  foundMoves = true;
-                } else {
-                  validMoves = doubleCheck.validMoves;
-                  moveInfo = doubleCheck.moveInfo;
-                }
               }
             }
           }
@@ -128,13 +121,12 @@ export class Checkers {
           moveInfo[move] = {
             captures: [],
           };
-          foundMoves = true;
         }
       }
     });
-    if (foundMoves) return { validMoves, moveInfo };
-    else return null;
+    return { validMoves, moveInfo };
   }
+
   getValidMoves(id) {
     const p = this.pieces[id];
     let validMoves = new Set();
