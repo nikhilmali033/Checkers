@@ -1,0 +1,87 @@
+.App {
+  text-align: center;
+}
+
+h6 {
+  margin-top: 0px;
+}
+
+.App-header {
+  background-color: #282c34;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: white;
+}
+
+.gameboard {
+  display: flex;
+  flex-wrap: wrap;
+  width: 500px;
+  height: 500px;
+  background-color: rgb(201, 0, 0);
+}
+
+.game-square {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 60.5px;
+  height: 60.5px;
+  border: 1px solid gold;
+  position: relative;
+}
+
+.game-square.black {
+  background-color: black;
+}
+
+.game-square.move {
+  background-color: rgb(255, 255, 84);
+  cursor: pointer;
+}
+
+.game-square.move:hover {
+  background-color: rgb(255, 255, 208);
+}
+
+.coord {
+  position: absolute;
+  font-size: 12px;
+  font-weight: bold;
+  top: 0px;
+  right: 0px;
+}
+
+.game-piece {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 4;
+  width: calc(100% - 10px);
+  height: calc(100% - 10px);
+  border-radius: 50%;
+  background-color: rgb(201, 0, 0);
+  color: rgb(109, 0, 0);
+}
+
+.game-piece.black {
+  background-color: rgb(49, 57, 88);
+  color: rgb(19, 22, 34);
+}
+
+.game-piece.movable {
+  cursor: pointer;
+}
+
+.game-piece.movable:hover {
+  border: 4px solid rgba(255, 255, 255, 0.5);
+}
+
+.game-piece.active {
+  border: 4px solid rgba(255, 255, 255, 0.5);
+}
