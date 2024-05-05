@@ -164,7 +164,7 @@ class Board:
     def select_piece(self, row, col):
         if row is None or col is None:
             self.selected_piece = None
-            self.unhighlight_squares()
+            self.unhighlight_squares() 
         else:
             print("running")
             self.selected_piece = self.board[row][col]
