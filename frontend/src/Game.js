@@ -64,7 +64,8 @@ export class Checkers {
     y0 = null,
     validMoves = new Set(),
     moveInfo = {},
-    from = null
+    from = null,
+    capturedPieces = []
   ) {
     let foundMoves = false;
     const p = this.pieces[id];
@@ -75,7 +76,7 @@ export class Checkers {
           { dx: 1, dy: 1 },
           { dx: -1, dy: -1 },
           { dx: 1, dy: -1 },
-          { dx: -1, dy: -1 },
+          { dx: -1, dy: 1 },
         ]
       : p.isBlack
       ? [
@@ -92,7 +93,7 @@ export class Checkers {
       if (this.inBound(x1, y1)) {
         const check = this.checkSpace(x1, y1);
         if (check != null) {
-          if (check.isBlack !== p.isBlack) {
+          if (check.isBlack !== p.isBlack && !capturedPieces.includes(check.id)) {
             const x2 = x + d.dx * 2;
             const y2 = y + d.dy * 2;
             if (this.inBound(x2, y2)) {
@@ -105,13 +106,13 @@ export class Checkers {
                   y2,
                   validMoves,
                   moveInfo,
-                  { x: x2, y: y2 }
+                  { x: x2, y: y2 },
+                  [...capturedPieces, check.id]
                 );
-                console.log(doubleCheck);
                 if (doubleCheck === null) {
                   validMoves.add(move);
                   moveInfo[move] = {
-                    captures: [check.id],
+                    captures: [...capturedPieces, check.id],
                   };
                   foundMoves = true;
                 } else {
@@ -134,7 +135,6 @@ export class Checkers {
     if (foundMoves) return { validMoves, moveInfo };
     else return null;
   }
-
   getValidMoves(id) {
     const p = this.pieces[id];
     let validMoves = new Set();
