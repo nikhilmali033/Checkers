@@ -8,7 +8,7 @@ class Agent:
     def move(self, board):
         print(f"{self.color.capitalize()} player's turn")
         selected_piece = None
-        valid_moves = []
+        valid_moves = {}
 
         while True:
             for event in pygame.event.get():
@@ -24,15 +24,15 @@ class Agent:
                     if piece and piece.color == self.color:
                         if selected_piece == piece:
                             selected_piece = None
-                            valid_moves = []
+                            valid_moves = {}
                             board.unhighlight_squares()
                         else:
                             selected_piece = piece
                             valid_moves = board.get_valid_moves(piece)
                             board.unhighlight_squares()
-                            board.highlight_valid_moves(valid_moves)
+                            board.highlight_valid_moves(valid_moves.keys())
                     elif selected_piece and (row, col) in valid_moves:
-                        board.move_piece(selected_piece, (row, col))
+                        board.move_piece(selected_piece, (row, col), valid_moves[(row, col)])
                         board.unhighlight_squares()
                         return
 
@@ -69,7 +69,7 @@ class Board:
         return self.board[row][col]
 
     def get_valid_moves(self, piece):
-        valid_moves = []
+        valid_moves = {}
         row, col = piece.position
         color = piece.color
 
@@ -78,17 +78,16 @@ class Board:
             # Red pieces move upwards
             if row > 0:
                 if col > 0 and self.board[row - 1][col - 1] is None:
-                    valid_moves.append((row - 1, col - 1))
+                    valid_moves[(row - 1, col - 1)] = []
                 if col < 7 and self.board[row - 1][col + 1] is None:
-                    valid_moves.append((row - 1, col + 1))
+                    valid_moves[(row - 1, col + 1)] = []
         else:
             # Black pieces move downwards
             if row < 7:
                 if col > 0 and self.board[row + 1][col - 1] is None:
-                    valid_moves.append((row + 1, col - 1))
+                    valid_moves[(row + 1, col - 1)] = []
                 if col < 7 and self.board[row + 1][col + 1] is None:
-                    valid_moves.append((row + 1, col + 1))
-
+                    valid_moves[(row + 1, col + 1)] = []
         # TODO: Handle king pieces
         # Add valid moves for king pieces (moving backwards)
         # pass
@@ -96,43 +95,57 @@ class Board:
             if color == "red":
                 if row < 7:
                     if col > 0 and self.board[row + 1][col - 1] is None:
-                        valid_moves.append((row + 1, col - 1))
+                        valid_moves[(row + 1, col - 1)] = []
                     if col < 7 and self.board[row + 1][col + 1] is None:
-                        valid_moves.append((row + 1, col + 1))
+                        valid_moves[(row + 1, col + 1)] = []
             if color == "black":
                 if row > 0:
                     if col > 0 and self.board[row - 1][col - 1] is None:
-                        valid_moves.append((row - 1, col - 1))
+                        valid_moves[(row - 1, col - 1)] = []
                     if col < 7 and self.board[row - 1][col + 1] is None:
-                        valid_moves.append((row - 1, col + 1))
+                        valid_moves[(row - 1, col + 1)] = []
         # Capturing moves
-        self.get_capturing_moves(piece, row, col, valid_moves, set())
+        valid_moves = self.get_capturing_moves(piece, row, col, valid_moves, set())
 
         return valid_moves
 
-    def get_capturing_moves(self, piece, row, col, valid_moves, visited):
+    def get_capturing_moves(self, piece, row, col, valid_moves, visited=None):
+        if valid_moves is None:
+            valid_moves = {}
+        if visited is None:
+            visited = set()
+    
         color = piece.color
         opponent_color = "black" if color == "red" else "red"
         directions = [(-1, -1), (-1, 1), (1, -1), (1, 1)]
-
+    
         for dr, dc in directions:
             new_row = row + 2 * dr
             new_col = col + 2 * dc
             mid_row = row + dr
             mid_col = col + dc
-
+    
             if 0 <= new_row < 8 and 0 <= new_col < 8 and (new_row, new_col) not in visited:
                 if (self.board[mid_row][mid_col] is not None and
                         self.board[mid_row][mid_col].color == opponent_color and
                         self.board[new_row][new_col] is None):
-                    # Check if the movement direction is valid for the color -> only works if piece  not a king
-                    if (color == 'red' and dr < 0) or (color == 'black' and dr > 0):
+                    # Check if the movement direction is valid for the color
+                    if (color == 'red' and dr < 0) or (color == 'black' and dr > 0) or piece.is_king:
                         visited.add((new_row, new_col))
-                        if valid_moves:  # forced jumps
-                            valid_moves.clear()
-                        valid_moves.append((new_row, new_col))
-                        self.get_capturing_moves(piece, new_row, new_col, valid_moves, visited)
+                        if (new_row, new_col) not in valid_moves:
+                            valid_moves[(new_row, new_col)] = []
+                        valid_moves[(new_row, new_col)].append([(mid_row, mid_col)])
+                        if (row, col) in valid_moves:
+                            valid_moves[(new_row, new_col)].extend(valid_moves[(row, col)])
 
+                        print("Before")
+                        print(valid_moves)
+
+                        # Continue checking for additional captures
+                        valid_moves = self.get_capturing_moves(piece, new_row, new_col, valid_moves, visited)
+                        print("after")
+                        print(valid_moves)
+    
         return valid_moves
 
     def highlight_square(self, position, color):
@@ -158,19 +171,25 @@ class Board:
             self.highlight_square(self.selected_piece.position, (255, 255, 0))  # Yellow color for selected piece
             pygame.display.update()
 
-    def move_piece(self, piece, new_position):
+    def move_piece(self, piece, new_position, captured_pieces):
         old_position = piece.position
         self.board[old_position[0]][old_position[1]] = None
-        # Calculate the position of the captured piece if it is a capturing move
-        if abs(new_position[0] - old_position[0]) == 2:
-            captured_row = (old_position[0] + new_position[0]) // 2
-            captured_col = (old_position[1] + new_position[1]) // 2
-            self.board[captured_row][captured_col] = None  # Remove the captured piece
+
+        # Remove the captured pieces
+        for li in captured_pieces:
+            for row, col in li:
+                self.board[row][col] = None
 
         # Place the piece in the new position
         self.board[new_position[0]][new_position[1]] = piece
         piece.position = new_position
 
+        # Promote to king if a piece reaches the end of the board
+        if piece.color == "red" and new_position[0] == 0:
+            piece.make_king()
+        elif piece.color == "black" and new_position[0] == 7:
+            piece.make_king()
+    
     def render(self):
         screen.fill((255, 255, 255))
         for row in range(8):
@@ -180,6 +199,8 @@ class Board:
                 if self.board[row][col]:
                     piece_color = (255, 0, 0) if self.board[row][col].color == "red" else (0, 0, 0)
                     pygame.draw.circle(screen, piece_color, (col * 100 + 50, row * 100 + 50), 40)
+                    if self.board[row][col].is_king:
+                        pygame.draw.circle(screen, (255, 255, 255), (col * 100 + 50, row * 100 + 50), 20)
         pygame.display.flip()
 
     def check_win(self):
