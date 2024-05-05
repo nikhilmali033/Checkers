@@ -92,7 +92,10 @@ export class Checkers {
       if (this.inBound(x1, y1)) {
         const check = this.checkSpace(x1, y1);
         if (check != null) {
-          if (check.isBlack !== p.isBlack && !capturedPieces.includes(check.id)) {
+          if (
+            check.isBlack !== p.isBlack &&
+            !capturedPieces.includes(check.id)
+          ) {
             const x2 = x + d.dx * 2;
             const y2 = y + d.dy * 2;
             if (this.inBound(x2, y2)) {
@@ -209,6 +212,7 @@ export class Checkers {
         this.pieces[x].captured = true;
       });
     }
+    console.log(this.processBoard());
   }
 
   pieceTurn(id) {
@@ -216,5 +220,20 @@ export class Checkers {
     return (
       (piece.isBlack && this.turn === 0) || (!piece.isBlack && this.turn === 1)
     );
+  }
+
+  processBoard() {
+    let arr = [];
+    this.board.forEach((e, i) => {
+      const x = Math.floor(i / 8);
+      if (x === i / 8) arr.push([]);
+      if (this.pieces[e.piece] != null)
+        arr[x].push(
+          (this.pieces[e.piece].isBlack ? "B" : "R") +
+            (this.pieces[e.piece].isKing ? "K" : "")
+        );
+      else arr[x].push("");
+    });
+    return arr;
   }
 }
