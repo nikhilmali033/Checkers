@@ -1,5 +1,6 @@
 import pygame
 
+
 class Agent:
     def __init__(self, color):
         self.color = color
@@ -35,14 +36,16 @@ class Agent:
                         board.unhighlight_squares()
                         return
 
+
 class Piece:
     def __init__(self, color, position):
         self.color = color
         self.position = position
-        self.is_king = False 
+        self.is_king = False
 
     def make_king(self):
         self.is_king = True
+
 
 class Board:
     def __init__(self):
@@ -86,9 +89,6 @@ class Board:
                 if col < 7 and self.board[row + 1][col + 1] is None:
                     valid_moves.append((row + 1, col + 1))
 
-        # Capturing moves
-        self.get_capturing_moves(piece, row, col, valid_moves, set())
-
         # TODO: Handle king pieces
         # Add valid moves for king pieces (moving backwards)
         # pass
@@ -105,9 +105,11 @@ class Board:
                         valid_moves.append((row - 1, col - 1))
                     if col < 7 and self.board[row - 1][col + 1] is None:
                         valid_moves.append((row - 1, col + 1))
+        # Capturing moves
+        self.get_capturing_moves(piece, row, col, valid_moves, set())
 
         return valid_moves
-    
+
     def get_capturing_moves(self, piece, row, col, valid_moves, visited):
         color = piece.color
         opponent_color = "black" if color == "red" else "red"
@@ -121,13 +123,12 @@ class Board:
 
             if 0 <= new_row < 8 and 0 <= new_col < 8 and (new_row, new_col) not in visited:
                 if (self.board[mid_row][mid_col] is not None and
-                    self.board[mid_row][mid_col].color == opponent_color and
-                    self.board[new_row][new_col] is None):
-
+                        self.board[mid_row][mid_col].color == opponent_color and
+                        self.board[new_row][new_col] is None):
                     # Check if the movement direction is valid for the color -> only works if piece  not a king
                     if (color == 'red' and dr < 0) or (color == 'black' and dr > 0):
                         visited.add((new_row, new_col))
-                        if valid_moves: #forced jumps 
+                        if valid_moves:  # forced jumps
                             valid_moves.clear()
                         valid_moves.append((new_row, new_col))
                         self.get_capturing_moves(piece, new_row, new_col, valid_moves, visited)
@@ -160,7 +161,7 @@ class Board:
     def move_piece(self, piece, new_position):
         old_position = piece.position
         self.board[old_position[0]][old_position[1]] = None
-        # Calculate the position of the captured piece if it is a capturing move 
+        # Calculate the position of the captured piece if it is a capturing move
         if abs(new_position[0] - old_position[0]) == 2:
             captured_row = (old_position[0] + new_position[0]) // 2
             captured_col = (old_position[1] + new_position[1]) // 2
@@ -169,7 +170,7 @@ class Board:
         # Place the piece in the new position
         self.board[new_position[0]][new_position[1]] = piece
         piece.position = new_position
-        
+
     def render(self):
         screen.fill((255, 255, 255))
         for row in range(8):
@@ -188,6 +189,7 @@ class Board:
     def reset(self):
         # Reset the board to its initial state
         pass
+
 
 def main():
     pygame.init()
@@ -215,6 +217,7 @@ def main():
 
         board.turn = "black" if board.turn == "red" else "red"
         board.check_win()
+
 
 if __name__ == "__main__":
     main()
