@@ -90,9 +90,21 @@ class Board:
         self.get_capturing_moves(piece, row, col, valid_moves, set())
 
         # TODO: Handle king pieces
-        # if piece.is_king:
-        #     # Add valid moves for king pieces (moving backwards)
-        #     pass
+        # Add valid moves for king pieces (moving backwards)
+        # pass
+        if piece.is_king:
+            if color == "red":
+                if row < 7:
+                    if col > 0 and self.board[row + 1][col - 1] is None:
+                        valid_moves.append((row + 1, col - 1))
+                    if col < 7 and self.board[row + 1][col + 1] is None:
+                        valid_moves.append((row + 1, col + 1))
+            if color == "black":
+                if row > 0:
+                    if col > 0 and self.board[row - 1][col - 1] is None:
+                        valid_moves.append((row - 1, col - 1))
+                    if col < 7 and self.board[row - 1][col + 1] is None:
+                        valid_moves.append((row - 1, col + 1))
 
         return valid_moves
     

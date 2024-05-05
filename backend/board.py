@@ -1,3 +1,8 @@
+import pygame
+
+from backend.piece import Piece
+
+
 class Board:
     def __init__(self):
         self.board = []
