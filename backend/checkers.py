@@ -126,12 +126,13 @@ class Board:
                         self.board[mid_row][mid_col].color == opponent_color and
                         self.board[new_row][new_col] is None):
                     # Check if the movement direction is valid for the color -> only works if piece  not a king
-                    if (color == 'red' and dr < 0) or (color == 'black' and dr > 0):
+                    if (color == 'red' and dr < 0) or (color == 'black' and dr > 0) or piece.is_king:
                         visited.add((new_row, new_col))
                         if valid_moves:  # forced jumps
                             valid_moves.clear()
                         valid_moves.append((new_row, new_col))
                         self.get_capturing_moves(piece, new_row, new_col, valid_moves, visited)
+                    # TODO capturing behavior for kings
 
         return valid_moves
 
@@ -159,6 +160,7 @@ class Board:
             pygame.display.update()
 
     def move_piece(self, piece, new_position):
+        print(new_position)
         old_position = piece.position
         self.board[old_position[0]][old_position[1]] = None
         # Calculate the position of the captured piece if it is a capturing move
@@ -170,6 +172,9 @@ class Board:
         # Place the piece in the new position
         self.board[new_position[0]][new_position[1]] = piece
         piece.position = new_position
+        if piece.color == "red" and piece.position[0] == 0 or \
+                piece.color == "black" and piece.position[0] == 7:
+            piece.make_king()
 
     def render(self):
         screen.fill((255, 255, 255))
@@ -180,6 +185,8 @@ class Board:
                 if self.board[row][col]:
                     piece_color = (255, 0, 0) if self.board[row][col].color == "red" else (0, 0, 0)
                     pygame.draw.circle(screen, piece_color, (col * 100 + 50, row * 100 + 50), 40)
+                    if self.board[row][col].is_king:
+                        pygame.draw.rect(screen, (150, 150, 150), (col * 100 + 25, row * 100 + 25, col * 100 + 75, row * 100 + 75))
         pygame.display.flip()
 
     def check_win(self):
