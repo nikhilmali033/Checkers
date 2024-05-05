@@ -1,4 +1,5 @@
-from board import *
+import math
+import numpy as np
 
 class Checkers:
     def __init__(self, p1, p2):
@@ -34,7 +35,7 @@ class Checkers:
 
 def main():
     checker = Checkers(None, None)
-    print(checker.board.getHash())
+    print(self.getHash())
 
 if __name__ == "__main__":
     main()
