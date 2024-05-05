@@ -1,4 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
+import { socket } from "./socket";
 
 const sqrCnt = 64;
 export class Checkers {
@@ -64,9 +65,9 @@ export class Checkers {
     y0 = null,
     validMoves = new Set(),
     moveInfo = {},
-    from = null
+    from = null,
+    capturedPieces = []
   ) {
-    let foundMoves = false;
     const p = this.pieces[id];
     const x = x0 === null ? p.x : x0;
     const y = y0 === null ? p.y : y0;
@@ -75,7 +76,7 @@ export class Checkers {
           { dx: 1, dy: 1 },
           { dx: -1, dy: -1 },
           { dx: 1, dy: -1 },
-          { dx: -1, dy: -1 },
+          { dx: -1, dy: 1 },
         ]
       : p.isBlack
       ? [
@@ -92,32 +93,29 @@ export class Checkers {
       if (this.inBound(x1, y1)) {
         const check = this.checkSpace(x1, y1);
         if (check != null) {
-          if (check.isBlack !== p.isBlack) {
+          if (
+            check.isBlack !== p.isBlack &&
+            !capturedPieces.includes(check.id)
+          ) {
             const x2 = x + d.dx * 2;
             const y2 = y + d.dy * 2;
             if (this.inBound(x2, y2)) {
               //If next diagonal space is empty
               if (this.checkSpace(x2, y2) === undefined) {
                 const move = `(${x2}, ${y2})`;
-                const doubleCheck = this.getValidUpdated(
+                validMoves.add(move);
+                moveInfo[move] = {
+                  captures: [...capturedPieces, check.id],
+                };
+                this.getValidUpdated(
                   id,
                   x2,
                   y2,
                   validMoves,
                   moveInfo,
-                  { x: x2, y: y2 }
+                  { x: x2, y: y2 },
+                  [...capturedPieces, check.id]
                 );
-                console.log(doubleCheck);
-                if (doubleCheck === null) {
-                  validMoves.add(move);
-                  moveInfo[move] = {
-                    captures: [check.id],
-                  };
-                  foundMoves = true;
-                } else {
-                  validMoves = doubleCheck.validMoves;
-                  moveInfo = doubleCheck.moveInfo;
-                }
               }
             }
           }
@@ -127,12 +125,10 @@ export class Checkers {
           moveInfo[move] = {
             captures: [],
           };
-          foundMoves = true;
         }
       }
     });
-    if (foundMoves) return { validMoves, moveInfo };
-    else return null;
+    return { validMoves, moveInfo };
   }
 
   getValidMoves(id) {
@@ -217,6 +213,9 @@ export class Checkers {
         this.pieces[x].captured = true;
       });
     }
+    const processed = this.processBoard();
+    console.log(processed);
+    socket.emit("game_status", processed);
   }
 
   pieceTurn(id) {
@@ -224,5 +223,20 @@ export class Checkers {
     return (
       (piece.isBlack && this.turn === 0) || (!piece.isBlack && this.turn === 1)
     );
+  }
+
+  processBoard() {
+    let arr = [];
+    this.board.forEach((e, i) => {
+      const x = Math.floor(i / 8);
+      if (x === i / 8) arr.push([]);
+      if (this.pieces[e.piece] != null)
+        arr[x].push(
+          (this.pieces[e.piece].isBlack ? "B" : "R") +
+            (this.pieces[e.piece].isKing ? "K" : "")
+        );
+      else arr[x].push("");
+    });
+    return arr;
   }
 }
