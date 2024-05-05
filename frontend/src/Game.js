@@ -1,4 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
+import { socket } from "./socket";
 
 const sqrCnt = 64;
 export class Checkers {
@@ -212,7 +213,9 @@ export class Checkers {
         this.pieces[x].captured = true;
       });
     }
-    console.log(this.processBoard());
+    const processed = this.processBoard();
+    console.log(processed);
+    socket.emit("game_status", processed);
   }
 
   pieceTurn(id) {

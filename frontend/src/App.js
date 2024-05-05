@@ -6,7 +6,7 @@ import { faCrown } from "@fortawesome/free-solid-svg-icons";
 import { io, socket } from "./socket";
 
 const init = new Checkers();
-// socket.connect();
+socket.connect();
 
 function App() {
   const [active, setActive] = useState(null);
