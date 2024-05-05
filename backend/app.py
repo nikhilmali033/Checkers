@@ -15,6 +15,10 @@ def connect(sid, environ):
 def my_message(sid, data):
     print('message ', data)
 
+@sio.on('game_status')
+def another_event(sid, data):
+    print(data)
+
 @sio.event
 def disconnect(sid):
     print('disconnect ', sid)
