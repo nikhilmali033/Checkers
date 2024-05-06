@@ -53,7 +53,18 @@ class Board:
         self.selected_piece = None
         self.turn = "red"
         self.initialize_board()
-
+    def get_board(self):
+        board_str = [[''] * 8 for _ in range(8)]
+        for row in range(8):
+            for col in range(8):
+                piece = self.board[row][col]
+                if piece:
+                    if piece.color == 'red':
+                        board_str[row][col] = 'RK' if piece.is_king else 'R'
+                    else:
+                        board_str[row][col] = 'BK' if piece.is_king else 'B'
+        return board_str
+    
     def initialize_board(self):
         for row in range(8):
             self.board.append([])
