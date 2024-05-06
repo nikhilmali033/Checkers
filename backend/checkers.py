@@ -261,7 +261,14 @@ class Board:
             print(f"It's {self.current_player.symbol}'s turn.")
             moves = self.get_all_moves()
             if len(moves) == 0:
-                return 'Tie'
+                if (self.current_player.symbol == 'B'):
+                    if self.feedback:
+                        self.giveReward('R')
+                    return 'R'
+                else:
+                    if self.feedback:
+                        self.giveReward('B')
+                    return 'B'
             
             
             hash, next_state = self.current_player.chooseAction(moves)
