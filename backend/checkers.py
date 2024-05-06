@@ -263,9 +263,9 @@ class Board:
             if len(moves) == 0:
                 #forfit to other player
                 if self.current_player == self.p1:
-                    self.winner = "R"
+                    self.winner = 'R'
                 else:
-                    self.winner = "B"
+                    self.winner = 'B'
                 self.end = True
                 if self.feedback:
                     self.giveReward(self.winner)
