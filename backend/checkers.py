@@ -261,7 +261,16 @@ class Board:
             print(f"It's {self.current_player.symbol}'s turn.")
             moves = self.get_all_moves()
             if len(moves) == 0:
-                return 'Tie'
+                #forfit to other player
+                if self.current_player == self.p1:
+                    self.winner = "R"
+                else:
+                    self.winner = "B"
+                self.end = True
+                if self.feedback:
+                    self.giveReward(self.winner)
+                return self.winner
+
             
             
             hash, next_state = self.current_player.chooseAction(moves)
@@ -276,6 +285,7 @@ class Board:
                     self.giveReward(winner)
                 return winner
             if rounds > 500:
+                print("Game ended in a Tie (500 rounds played without a winner)")
                 return 'Tie'
             rounds = rounds + 1
 
