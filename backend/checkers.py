@@ -180,17 +180,17 @@ class Board:
 
 
     def check_win(self):
-        if self.end is not None:
-            return self.end, self.winner
+
+        #if self.end is not None:
+         #   return self.end, self.winner
         
         rCount = 0
         bCount = 0
-
         for i in self.board.reshape(8*8):
             if i == 'R' or i == 'RK':
-                rCount = rCount + 1
+                rCount =+ 1
             elif i == 'B' or i == 'BK':
-                bCount = bCount + 1
+                bCount =+ 1
         
         if rCount == 0:
             self.winner = 'B'
@@ -266,10 +266,7 @@ class Board:
             
             hash, next_state = self.current_player.chooseAction(moves)
 
-            print("before:")
-            print(self.board)
-            
-            print("after")
+        
             print(next_state)
             self.board = next_state
             isEnd, winner = self.check_win()
