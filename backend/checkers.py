@@ -8,7 +8,7 @@ class Agent:
     def move(self, board):
         print(f"{self.color.capitalize()} player's turn")
         selected_piece = None
-        valid_moves = {}
+        captures_by_move = {}
 
         while True:
             for event in pygame.event.get():
@@ -24,15 +24,15 @@ class Agent:
                     if piece and piece.color == self.color:
                         if selected_piece == piece:
                             selected_piece = None
-                            valid_moves = {}
+                            captures_by_move = {}
                             board.unhighlight_squares()
                         else:
                             selected_piece = piece
-                            valid_moves = board.get_valid_moves(piece)
+                            captures_by_move = board.get_captures_by_move(piece)
                             board.unhighlight_squares()
-                            board.highlight_valid_moves(valid_moves.keys())
-                    elif selected_piece and (row, col) in valid_moves:
-                        board.move_piece(selected_piece, (row, col), valid_moves[(row, col)])
+                            board.highlight_captures_by_move(captures_by_move.keys())
+                    elif selected_piece and (row, col) in captures_by_move:
+                        board.move_piece(selected_piece, (row, col), captures_by_move[(row, col)])
                         board.unhighlight_squares()
                         return
 
@@ -68,8 +68,8 @@ class Board:
     def get_piece(self, row, col):
         return self.board[row][col]
 
-    def get_valid_moves(self, piece):
-        valid_moves = {}
+    def get_captures_by_move(self, piece):
+        captures_by_move = {}
         row, col = piece.position
         color = piece.color
 
@@ -78,16 +78,16 @@ class Board:
             # Red pieces move upwards
             if row > 0:
                 if col > 0 and self.board[row - 1][col - 1] is None:
-                    valid_moves[(row - 1, col - 1)] = []
+                    captures_by_move[(row - 1, col - 1)] = []
                 if col < 7 and self.board[row - 1][col + 1] is None:
-                    valid_moves[(row - 1, col + 1)] = []
+                    captures_by_move[(row - 1, col + 1)] = []
         else:
             # Black pieces move downwards
             if row < 7:
                 if col > 0 and self.board[row + 1][col - 1] is None:
-                    valid_moves[(row + 1, col - 1)] = []
+                    captures_by_move[(row + 1, col - 1)] = []
                 if col < 7 and self.board[row + 1][col + 1] is None:
-                    valid_moves[(row + 1, col + 1)] = []
+                    captures_by_move[(row + 1, col + 1)] = []
         # TODO: Handle king pieces
         # Add valid moves for king pieces (moving backwards)
         # pass
@@ -95,23 +95,23 @@ class Board:
             if color == "red":
                 if row < 7:
                     if col > 0 and self.board[row + 1][col - 1] is None:
-                        valid_moves[(row + 1, col - 1)] = []
+                        captures_by_move[(row + 1, col - 1)] = []
                     if col < 7 and self.board[row + 1][col + 1] is None:
-                        valid_moves[(row + 1, col + 1)] = []
+                        captures_by_move[(row + 1, col + 1)] = []
             if color == "black":
                 if row > 0:
                     if col > 0 and self.board[row - 1][col - 1] is None:
-                        valid_moves[(row - 1, col - 1)] = []
+                        captures_by_move[(row - 1, col - 1)] = []
                     if col < 7 and self.board[row - 1][col + 1] is None:
-                        valid_moves[(row - 1, col + 1)] = []
+                        captures_by_move[(row - 1, col + 1)] = []
         # Capturing moves
-        valid_moves = self.get_capturing_moves(piece, row, col, valid_moves, set())
+        captures_by_move = self.get_capturing_moves(piece, row, col, captures_by_move, set())
 
-        return valid_moves
+        return captures_by_move
 
-    def get_capturing_moves(self, piece, row, col, valid_moves, visited=None):
-        if valid_moves is None:
-            valid_moves = {}
+    def get_capturing_moves(self, piece, row, col, captures_by_move, visited=None):
+        if captures_by_move is None:
+            captures_by_move = {}
         if visited is None:
             visited = set()
     
@@ -132,21 +132,21 @@ class Board:
                     # Check if the movement direction is valid for the color
                     if (color == 'red' and dr < 0) or (color == 'black' and dr > 0) or piece.is_king:
                         visited.add((new_row, new_col))
-                        if (new_row, new_col) not in valid_moves:
-                            valid_moves[(new_row, new_col)] = []
-                        valid_moves[(new_row, new_col)].append([(mid_row, mid_col)])
-                        if (row, col) in valid_moves:
-                            valid_moves[(new_row, new_col)].extend(valid_moves[(row, col)])
+                        if (new_row, new_col) not in captures_by_move:
+                            captures_by_move[(new_row, new_col)] = []
+                        captures_by_move[(new_row, new_col)].append([(mid_row, mid_col)])
+                        if (row, col) in captures_by_move:
+                            captures_by_move[(new_row, new_col)].extend(captures_by_move[(row, col)])
 
                         print("Before")
-                        print(valid_moves)
+                        print(captures_by_move)
 
                         # Continue checking for additional captures
-                        valid_moves = self.get_capturing_moves(piece, new_row, new_col, valid_moves, visited)
+                        captures_by_move = self.get_capturing_moves(piece, new_row, new_col, captures_by_move, visited)
                         print("after")
-                        print(valid_moves)
+                        print(captures_by_move)
     
-        return valid_moves
+        return captures_by_move
 
     def highlight_square(self, position, color):
         row, col = position
@@ -157,8 +157,8 @@ class Board:
         self.selected_piece = None
         self.render()
 
-    def highlight_valid_moves(self, valid_moves):
-        for move in valid_moves:
+    def highlight_captures_by_move(self, captures_by_move):
+        for move in captures_by_move:
             self.highlight_square(move, (255, 0, 0))  # Red color for possible moves
 
     def select_piece(self, row, col):
@@ -176,8 +176,8 @@ class Board:
         self.board[old_position[0]][old_position[1]] = None
 
         # Remove the captured pieces
-        for li in captured_pieces:
-            for row, col in li:
+        for piec in captured_pieces:
+            for row, col in piec:
                 self.board[row][col] = None
 
         # Place the piece in the new position
