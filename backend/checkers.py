@@ -54,6 +54,18 @@ class Board:
         self.turn = "red"
         self.initialize_board()
 
+    def get_board(self):
+        board_str = [[''] * 8 for _ in range(8)]
+        for row in range(8):
+            for col in range(8):
+                piece = self.board[row][col]
+                if piece:
+                    if piece.color == 'red':
+                        board_str[row][col] = 'RK' if piece.is_king else 'R'
+                    else:
+                        board_str[row][col] = 'BK' if piece.is_king else 'B'
+        return board_str
+
     def initialize_board(self):
         for row in range(8):
             self.board.append([])
@@ -211,7 +223,6 @@ class Board:
         # Reset the board to its initial state
         pass
 
-
 def main():
     pygame.init()
     global screen
@@ -238,7 +249,6 @@ def main():
 
         board.turn = "black" if board.turn == "red" else "red"
         board.check_win()
-
 
 if __name__ == "__main__":
     main()
