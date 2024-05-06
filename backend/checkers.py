@@ -9,16 +9,17 @@ class Piece:
         self.is_king = False
 
     def __str__(self):
-        if self.color == 'black':
-            if self.is_king:
-                return 'BK'
-            else:
-                return 'B'
-        else:
+        if self.color == 'red':
             if self.is_king:
                 return 'RK'
             else:
                 return 'R'
+        else:
+            if self.is_king:
+                return 'BK'
+            else:
+                return 'B'
+
 
 class Board:
     def __init__(self, p1 : Player, p2 : Player, feedback=True):
@@ -50,7 +51,7 @@ class Board:
         return int(hashVal)
 
     def initialize_board(self):
-        self.board = np.zeros((8,8), dtype='U1')
+        self.board = np.zeros((8,8), dtype='U2')
         for i in range(8):
             for j in range(8):
                 isBlack = ((i % 2 == 0 and j % 2 == 0) or (i % 2 == 1 and j % 2 == 1))
@@ -79,21 +80,24 @@ class Board:
                     captures_by_move[(row + 1, col - 1)] = []
                 if col < 7 and self.board[row + 1][col + 1] == '':
                     captures_by_move[(row + 1, col + 1)] = []
+
         # Handle king pieces
         # Add valid moves for king pieces (moving backwards)
+        # Handle king pieces
         if piece.is_king:
             if color == "red":
-                if row < 7:
-                    if col > 0 and self.board[row + 1][col - 1] == '':
-                        captures_by_move[(row + 1, col - 1)] = []
-                    if col < 7 and self.board[row + 1][col + 1] == '':
-                        captures_by_move[(row + 1, col + 1)] = []
-            if color == "black":
-                if row > 0:
+                if row > 0:  # Move backward for red kings
                     if col > 0 and self.board[row - 1][col - 1] == '':
                         captures_by_move[(row - 1, col - 1)] = []
                     if col < 7 and self.board[row - 1][col + 1] == '':
                         captures_by_move[(row - 1, col + 1)] = []
+            if color == "black":
+                if row < 7:  # Move backward for black kings
+                    if col > 0 and self.board[row + 1][col - 1] == '':
+                        captures_by_move[(row + 1, col - 1)] = []
+                    if col < 7 and self.board[row + 1][col + 1] == '':
+                        captures_by_move[(row + 1, col + 1)] = []
+
         # Capturing moves
         captures_by_move = self.get_capturing_moves(piece, row, col, captures_by_move, set())
 
@@ -151,6 +155,8 @@ class Board:
         # Promote to king if a piece reaches the end of the board
         if piece.color == "red" and new_position[0] == 0:
             piece.is_king = True
+
+
         elif piece.color == "black" and new_position[0] == 7:
             piece.is_king = True
 
@@ -202,6 +208,7 @@ class Board:
                 for pos, captured in moves.items():
                     # print(f"Moved Piece {index} to {pos}")
                     next_state = self.get_next_state(cur, pos, captured)
+                    print(cur.is_king)
                     hash = self.get_hash(next_state)
                     # print(hash)
                     # print(next_state)
@@ -229,14 +236,24 @@ class Board:
         self.reset()
         rounds = 0
         while True:
+            
             if self.current_player == self.p1:
                 self.current_player = self.p2
             else:
                 self.current_player = self.p1
+                
+            print(f"It's {self.current_player.symbol}'s turn.")
             moves = self.get_all_moves()
             if len(moves) == 0:
                 return 'Tie'
+            
+            
             hash, next_state = self.current_player.chooseAction(moves)
+
+            print("before:")
+            print(self.board)
+            
+            print("after")
             print(next_state)
             self.board = next_state
             isEnd, winner = self.check_win()
@@ -259,6 +276,7 @@ def main():
         print("Game ended in a Tie")
     else:
         print(f"{winner} Won!")
+    
 
 if __name__ == "__main__":
     main()
