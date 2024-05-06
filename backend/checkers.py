@@ -1,5 +1,6 @@
 import numpy as np
 import math
+from player import Player
 
 class Piece:
     def __init__(self, color, position):
@@ -20,11 +21,16 @@ class Piece:
                 return 'R'
 
 class Board:
-    def __init__(self):
-        self.board = np.zeros((8,8), dtype='U1')
+    def __init__(self, p1 : Player, p2 : Player, feedback=True):
         self.selected_piece = None
         self.turn = "black"
         self.initialize_board()
+        self.p1 = p1
+        self.p2 = p2
+        self.current_player : Player = None
+        self.feedback = feedback
+        self.end = None
+        self.winner = None
 
     def get_hash(self, board):
         data = board.copy()
@@ -44,6 +50,7 @@ class Board:
         return int(hashVal)
 
     def initialize_board(self):
+        self.board = np.zeros((8,8), dtype='U1')
         for i in range(8):
             for j in range(8):
                 isBlack = ((i % 2 == 0 and j % 2 == 0) or (i % 2 == 1 and j % 2 == 1))
@@ -52,7 +59,7 @@ class Board:
                 elif (i > 4 and isBlack):
                     self.board[i, j] = "R"
 
-    def get_captures_by_move(self, piece):
+    def get_captures_by_move(self, piece : Piece):
         captures_by_move = {}
         row, col = piece.position
         color = piece.color
@@ -92,7 +99,7 @@ class Board:
 
         return captures_by_move
 
-    def get_capturing_moves(self, piece, row, col, captures_by_move, visited=None):
+    def get_capturing_moves(self, piece : Piece, row, col, captures_by_move, visited=None):
         if captures_by_move is None:
             captures_by_move = {}
         if visited is None:
@@ -131,7 +138,7 @@ class Board:
     
         return captures_by_move
 
-    def get_next_state(self, piece, new_position, captured_pieces):
+    def get_next_state(self, piece : Piece, new_position, captured_pieces):
         next_state = self.board.copy()
         old_position = piece.position
         next_state[old_position[0], old_position[1]] = ''
@@ -154,7 +161,7 @@ class Board:
 
     def check_win(self):
         if self.end is not None:
-            return self.end
+            return self.end, self.winner
         
         rCount = 0
         bCount = 0
@@ -184,23 +191,74 @@ class Board:
         self.initialize_board()
 
     def get_all_moves(self):
+        actions = []
         for index, piece in np.ndenumerate(self.board):
-            if self.turn == "black" and 'B' in piece:
-                print(index)
+            if self.current_player.symbol in piece:
+                # print(index) Piece Coordinate Tuple
                 color = "red" if "R" in piece else "black"
                 cur = Piece(color, index)
                 moves = self.get_captures_by_move(cur)
                 print(moves)
                 for pos, captured in moves.items():
-                    print(f"Moved Piece {index} to {pos}")
+                    # print(f"Moved Piece {index} to {pos}")
                     next_state = self.get_next_state(cur, pos, captured)
-                    print(self.get_hash(next_state))
-                    print(next_state)
+                    hash = self.get_hash(next_state)
+                    # print(hash)
+                    # print(next_state)
+                    actions.append((hash, next_state))
+            
+        return actions
+    
+    def feedCurrentState(self):
+        self.p1.feedState(self.get_hash(self.board))
+        self.p2.feedState(self.get_hash(self.board))
+    
+    def giveReward(self, winner):
+        if winner == "B":
+            self.p1.feedReward(1)
+            self.p2.feedReward(0)
+        elif winner == "R":
+            self.p1.feedReward(0)
+            self.p2.feedReward(1)
+        else:
+            self.p1.feedReward(0.1)  # small reward if draw
+            self.p2.feedReward(0.1)
+
+
+    def play(self):
+        self.reset()
+        rounds = 0
+        while True:
+            if self.current_player == self.p1:
+                self.current_player = self.p2
+            else:
+                self.current_player = self.p1
+            moves = self.get_all_moves()
+            if len(moves) == 0:
+                return 'Tie'
+            hash, next_state = self.current_player.chooseAction(moves)
+            print(next_state)
+            self.board = next_state
+            isEnd, winner = self.check_win()
+            self.feedCurrentState()
+            if isEnd:
+                if self.feedback:
+                    self.giveReward(winner)
+                return winner
+            if rounds > 500:
+                return 'Tie'
+            rounds = rounds + 1
 
 
 def main():
-    board = Board()
-    board.get_all_moves()
+    p1 = Player("B")
+    p2 = Player("R")
+    board = Board(p1, p2)
+    winner = board.play()
+    if winner == 'Tie':
+        print("Game ended in a Tie")
+    else:
+        print(f"{winner} Won!")
 
 if __name__ == "__main__":
     main()

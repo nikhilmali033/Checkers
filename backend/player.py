@@ -3,12 +3,12 @@ import pickle
 
 class Player:
     def __init__(self, name, exp_rate=0.3):
-            self.name = name
-            self.states = []  # record all positions taken
+            self.symbol = name
+            self.states = []  # hash of all positions taken
             self.lr = 0.2
             self.exp_rate = exp_rate
-            self.decay_gamma = 0.9
-            self.states_value = {}  # state -> value
+            # self.decay_gamma = 0.9
+            self.estimations = dict()  # state -> value
 
     def feedState(self, state):
         self.states.append(state)
@@ -16,31 +16,30 @@ class Player:
     def setSymbol(self, symbol):
         self.symbol = symbol
 
-    def chooseAction(self, positions, current_board, symbol):
+    def chooseAction(self, positions):
         if np.random.uniform(0, 1) <= self.exp_rate:
             # take random action
             idx = np.random.choice(len(positions))
             action = positions[idx]
         else:
-            value_max = -999
-            for p in positions:
-                next_board = current_board.copy()
-                next_board[p] = symbol
-                next_boardHash = self.getHash(next_board)
-                value = 0 if self.states_value.get(next_boardHash) is None else self.states_value.get(next_boardHash)
-                # print("value", value)
-                if value >= value_max:
-                    value_max = value
-                    action = p
+            values = []
+            for hash, state in positions:
+                values.append((self.estimations.get(hash, 0), state))
+            np.random.shuffle(values)
+            values.sort(key=lambda x: x[0], reverse=True)
+            action = values[0]
         # print("{} takes action {}".format(self.name, action))
         return action
     
     def feedReward(self, reward):
-        for st in reversed(self.states):
-            if self.states_value.get(st) is None:
-                self.states_value[st] = 0
-            self.states_value[st] += self.lr * (self.decay_gamma * reward - self.states_value[st])
-            reward = self.states_value[st]
+        if len(self.states) == 0:
+            return
+        target = reward
+        for latestState in reversed(self.states):
+            value = self.estimations.get(latestState, 0) + self.lr * (target - self.estimations.get(latestState, 0))
+            self.estimations[latestState] = value
+            target = value
+        self.states = []
 
     def savePolicy(self):
         fw = open('optimal_policy_' + str(self.symbol), 'wb')
