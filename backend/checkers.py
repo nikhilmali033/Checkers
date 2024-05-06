@@ -279,7 +279,7 @@ class Board:
             print(next_state)
             self.board = next_state
             isEnd, winner = self.check_win()
-            self.feedCurrentState()
+            self.feedCurrentState() 
             if isEnd:
                 if self.feedback:
                     self.giveReward(winner)
