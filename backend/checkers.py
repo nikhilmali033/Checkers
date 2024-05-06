@@ -246,6 +246,8 @@ def main():
             red_agent.move(board)
         else:
             black_agent.move(board)
+        
+        print(board.get_board())
 
         board.turn = "black" if board.turn == "red" else "red"
         board.check_win()
