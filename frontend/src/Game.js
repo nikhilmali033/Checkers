@@ -214,7 +214,6 @@ export class Checkers {
       });
     }
     const processed = this.processBoard();
-    console.log(processed);
     socket.emit("game_status", processed);
   }
 

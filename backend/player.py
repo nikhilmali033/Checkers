@@ -13,6 +13,9 @@ class Player:
     def feedState(self, state):
         self.states.append(state)
 
+    def setSymbol(self, symbol):
+        self.symbol = symbol
+
     def chooseAction(self, positions, current_board, symbol):
         if np.random.uniform(0, 1) <= self.exp_rate:
             # take random action
