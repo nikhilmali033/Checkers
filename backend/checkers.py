@@ -85,18 +85,32 @@ class Board:
         # Add valid moves for king pieces (moving backwards)
         # Handle king pieces
         if piece.is_king:
+            # Move backward and forward for kings
             if color == "red":
-                if row > 0:  # Move backward for red kings
+            # Red kings can move both up and down
+                if row > 0:
                     if col > 0 and self.board[row - 1][col - 1] == '':
                         captures_by_move[(row - 1, col - 1)] = []
                     if col < 7 and self.board[row - 1][col + 1] == '':
                         captures_by_move[(row - 1, col + 1)] = []
-            if color == "black":
-                if row < 7:  # Move backward for black kings
+                if row < 7:
                     if col > 0 and self.board[row + 1][col - 1] == '':
                         captures_by_move[(row + 1, col - 1)] = []
                     if col < 7 and self.board[row + 1][col + 1] == '':
                         captures_by_move[(row + 1, col + 1)] = []
+            elif color == "black":
+            # Black kings can also move both up and down
+                if row > 0:
+                    if col > 0 and self.board[row - 1][col - 1] == '':
+                        captures_by_move[(row - 1, col - 1)] = []
+                    if col < 7 and self.board[row - 1][col + 1] == '':
+                        captures_by_move[(row - 1, col + 1)] = []
+                if row < 7:
+                    if col > 0 and self.board[row + 1][col - 1] == '':
+                        captures_by_move[(row + 1, col - 1)] = []
+                    if col < 7 and self.board[row + 1][col + 1] == '':
+                        captures_by_move[(row + 1, col + 1)] = []
+
 
         # Capturing moves
         captures_by_move = self.get_capturing_moves(piece, row, col, captures_by_move, set())
@@ -203,12 +217,14 @@ class Board:
                 # print(index) Piece Coordinate Tuple
                 color = "red" if "R" in piece else "black"
                 cur = Piece(color, index)
+                if piece == "RK" or piece == "BK":
+                    cur.is_king = True
+
                 moves = self.get_captures_by_move(cur)
                 print(moves)
                 for pos, captured in moves.items():
                     # print(f"Moved Piece {index} to {pos}")
                     next_state = self.get_next_state(cur, pos, captured)
-                    print(cur.is_king)
                     hash = self.get_hash(next_state)
                     # print(hash)
                     # print(next_state)
