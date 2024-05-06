@@ -1,41 +1,5 @@
-import pygame
-
-
-class Agent:
-    def __init__(self, color):
-        self.color = color
-
-    def move(self, board):
-        print(f"{self.color.capitalize()} player's turn")
-        selected_piece = None
-        captures_by_move = {}
-
-        while True:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    pygame.quit()
-                    return
-
-                if event.type == pygame.MOUSEBUTTONDOWN:
-                    mouse_pos = pygame.mouse.get_pos()
-                    row, col = mouse_pos[1] // 100, mouse_pos[0] // 100
-                    piece = board.get_piece(row, col)
-
-                    if piece and piece.color == self.color:
-                        if selected_piece == piece:
-                            selected_piece = None
-                            captures_by_move = {}
-                            board.unhighlight_squares()
-                        else:
-                            selected_piece = piece
-                            captures_by_move = board.get_captures_by_move(piece)
-                            board.unhighlight_squares()
-                            board.highlight_captures_by_move(captures_by_move.keys())
-                    elif selected_piece and (row, col) in captures_by_move:
-                        board.move_piece(selected_piece, (row, col), captures_by_move[(row, col)])
-                        board.unhighlight_squares()
-                        return
-
+import numpy as np
+import math
 
 class Piece:
     def __init__(self, color, position):
@@ -43,42 +7,50 @@ class Piece:
         self.position = position
         self.is_king = False
 
-    def make_king(self):
-        self.is_king = True
-
+    def __str__(self):
+        if self.color == 'black':
+            if self.is_king:
+                return 'BK'
+            else:
+                return 'B'
+        else:
+            if self.is_king:
+                return 'RK'
+            else:
+                return 'R'
 
 class Board:
     def __init__(self):
-        self.board = []
+        self.board = np.zeros((8,8), dtype='U1')
         self.selected_piece = None
-        self.turn = "red"
+        self.turn = "black"
         self.initialize_board()
 
-    def get_board(self):
-        board_str = [[''] * 8 for _ in range(8)]
-        for row in range(8):
-            for col in range(8):
-                piece = self.board[row][col]
-                if piece:
-                    if piece.color == 'red':
-                        board_str[row][col] = 'RK' if piece.is_king else 'R'
-                    else:
-                        board_str[row][col] = 'BK' if piece.is_king else 'B'
-        return board_str
+    def get_hash(self, board):
+        data = board.copy()
+        hashVal = 0
+        for i in data.reshape(8 * 8):
+            if i == 'R':
+                i = 1
+            elif i == 'RK':
+                i = 2
+            elif i == 'B':
+                i = 3
+            elif i == 'BK':
+                i = 4
+            else:
+                i = 0
+            hashVal = hashVal * 3 + i
+        return int(hashVal)
 
     def initialize_board(self):
-        for row in range(8):
-            self.board.append([])
-            for col in range(8):
-                if row < 3 and (row + col) % 2 == 1:
-                    self.board[row].append(Piece("black", (row, col)))
-                elif row > 4 and (row + col) % 2 == 1:
-                    self.board[row].append(Piece("red", (row, col)))
-                else:
-                    self.board[row].append(None)
-
-    def get_piece(self, row, col):
-        return self.board[row][col]
+        for i in range(8):
+            for j in range(8):
+                isBlack = ((i % 2 == 0 and j % 2 == 0) or (i % 2 == 1 and j % 2 == 1))
+                if (i < 3 and isBlack):
+                    self.board[i,j] = "B"
+                elif (i > 4 and isBlack):
+                    self.board[i, j] = "R"
 
     def get_captures_by_move(self, piece):
         captures_by_move = {}
@@ -89,32 +61,31 @@ class Board:
         if color == "red":
             # Red pieces move upwards
             if row > 0:
-                if col > 0 and self.board[row - 1][col - 1] is None:
+                if col > 0 and self.board[row - 1][col - 1] == '':
                     captures_by_move[(row - 1, col - 1)] = []
-                if col < 7 and self.board[row - 1][col + 1] is None:
+                if col < 7 and self.board[row - 1][col + 1] == '':
                     captures_by_move[(row - 1, col + 1)] = []
         else:
             # Black pieces move downwards
             if row < 7:
-                if col > 0 and self.board[row + 1][col - 1] is None:
+                if col > 0 and self.board[row + 1][col - 1] == '':
                     captures_by_move[(row + 1, col - 1)] = []
-                if col < 7 and self.board[row + 1][col + 1] is None:
+                if col < 7 and self.board[row + 1][col + 1] == '':
                     captures_by_move[(row + 1, col + 1)] = []
-        # TODO: Handle king pieces
+        # Handle king pieces
         # Add valid moves for king pieces (moving backwards)
-        # pass
         if piece.is_king:
             if color == "red":
                 if row < 7:
-                    if col > 0 and self.board[row + 1][col - 1] is None:
+                    if col > 0 and self.board[row + 1][col - 1] == '':
                         captures_by_move[(row + 1, col - 1)] = []
-                    if col < 7 and self.board[row + 1][col + 1] is None:
+                    if col < 7 and self.board[row + 1][col + 1] == '':
                         captures_by_move[(row + 1, col + 1)] = []
             if color == "black":
                 if row > 0:
-                    if col > 0 and self.board[row - 1][col - 1] is None:
+                    if col > 0 and self.board[row - 1][col - 1] == '':
                         captures_by_move[(row - 1, col - 1)] = []
-                    if col < 7 and self.board[row - 1][col + 1] is None:
+                    if col < 7 and self.board[row - 1][col + 1] == '':
                         captures_by_move[(row - 1, col + 1)] = []
         # Capturing moves
         captures_by_move = self.get_capturing_moves(piece, row, col, captures_by_move, set())
@@ -128,7 +99,7 @@ class Board:
             visited = set()
     
         color = piece.color
-        opponent_color = "black" if color == "red" else "red"
+        opponent_color = "B" if color == "red" else "R"
         directions = [(-1, -1), (-1, 1), (1, -1), (1, 1)]
     
         for dr, dc in directions:
@@ -138,9 +109,9 @@ class Board:
             mid_col = col + dc
     
             if 0 <= new_row < 8 and 0 <= new_col < 8 and (new_row, new_col) not in visited:
-                if (self.board[mid_row][mid_col] is not None and
-                        self.board[mid_row][mid_col].color == opponent_color and
-                        self.board[new_row][new_col] is None):
+                if (self.board[mid_row, mid_col] != '' and
+                        opponent_color in self.board[mid_row, mid_col] and
+                        self.board[new_row, new_col] == ''):
                     # Check if the movement direction is valid for the color
                     if (color == 'red' and dr < 0) or (color == 'black' and dr > 0) or piece.is_king:
                         visited.add((new_row, new_col))
@@ -150,107 +121,86 @@ class Board:
                         if (row, col) in captures_by_move:
                             captures_by_move[(new_row, new_col)].extend(captures_by_move[(row, col)])
 
-                        print("Before")
-                        print(captures_by_move)
+                        # print("Before")
+                        # print(captures_by_move)
 
                         # Continue checking for additional captures
                         captures_by_move = self.get_capturing_moves(piece, new_row, new_col, captures_by_move, visited)
-                        print("after")
-                        print(captures_by_move)
+                        # print("after")
+                        # print(captures_by_move)
     
         return captures_by_move
 
-    def highlight_square(self, position, color):
-        row, col = position
-        pygame.draw.rect(screen, color, (col * 100, row * 100, 100, 100), 4)
-        pygame.display.update()
-
-    def unhighlight_squares(self):
-        self.selected_piece = None
-        self.render()
-
-    def highlight_captures_by_move(self, captures_by_move):
-        for move in captures_by_move:
-            self.highlight_square(move, (255, 0, 0))  # Red color for possible moves
-
-    def select_piece(self, row, col):
-        if row is None or col is None:
-            self.selected_piece = None
-            self.unhighlight_squares() 
-        else:
-            print("running")
-            self.selected_piece = self.board[row][col]
-            self.highlight_square(self.selected_piece.position, (255, 255, 0))  # Yellow color for selected piece
-            pygame.display.update()
-
-    def move_piece(self, piece, new_position, captured_pieces):
+    def get_next_state(self, piece, new_position, captured_pieces):
+        next_state = self.board.copy()
         old_position = piece.position
-        self.board[old_position[0]][old_position[1]] = None
+        next_state[old_position[0], old_position[1]] = ''
 
         # Remove the captured pieces
         for piec in captured_pieces:
             for row, col in piec:
-                self.board[row][col] = None
-
-        # Place the piece in the new position
-        self.board[new_position[0]][new_position[1]] = piece
-        piece.position = new_position
+                next_state[row, col] = ''
 
         # Promote to king if a piece reaches the end of the board
         if piece.color == "red" and new_position[0] == 0:
-            piece.make_king()
+            piece.is_king = True
         elif piece.color == "black" and new_position[0] == 7:
-            piece.make_king()
-    
-    def render(self):
-        screen.fill((255, 255, 255))
-        for row in range(8):
-            for col in range(8):
-                color = (255, 255, 255) if (row + col) % 2 == 0 else (150, 150, 150)
-                pygame.draw.rect(screen, color, (col * 100, row * 100, 100, 100))
-                if self.board[row][col]:
-                    piece_color = (255, 0, 0) if self.board[row][col].color == "red" else (0, 0, 0)
-                    pygame.draw.circle(screen, piece_color, (col * 100 + 50, row * 100 + 50), 40)
-                    if self.board[row][col].is_king:
-                        pygame.draw.circle(screen, (255, 255, 255), (col * 100 + 50, row * 100 + 50), 20)
-        pygame.display.flip()
+            piece.is_king = True
+
+        # Place the piece in the new position
+        next_state[new_position[0], new_position[1]] = str(piece)
+        return next_state
+
 
     def check_win(self):
-        # Check if the game has ended and determine the winner
-        pass
+        if self.end is not None:
+            return self.end
+        
+        rCount = 0
+        bCount = 0
+
+        for i in self.board.reshape(8*8):
+            if i == 'R' or i == 'RK':
+                rCount = rCount + 1
+            elif i == 'B' or i == 'BK':
+                bCount = bCount + 1
+        
+        if rCount == 0:
+            self.winner = 'B'
+            self.end = True
+        elif bCount == 0:
+            self.winner = 'R'
+            self.end = True
+        else:
+            self.end = False
+        
+        return self.end, self.winner
 
     def reset(self):
         # Reset the board to its initial state
-        pass
+        self.board = []
+        self.selected_piece = None
+        self.turn = "red"
+        self.initialize_board()
+
+    def get_all_moves(self):
+        for index, piece in np.ndenumerate(self.board):
+            if self.turn == "black" and 'B' in piece:
+                print(index)
+                color = "red" if "R" in piece else "black"
+                cur = Piece(color, index)
+                moves = self.get_captures_by_move(cur)
+                print(moves)
+                for pos, captured in moves.items():
+                    print(f"Moved Piece {index} to {pos}")
+                    next_state = self.get_next_state(cur, pos, captured)
+                    print(self.get_hash(next_state))
+                    print(next_state)
+
 
 def main():
-    pygame.init()
-    global screen
-    screen = pygame.display.set_mode((800, 800))
-    clock = pygame.time.Clock()
     board = Board()
-
-    red_agent = Agent("red")
-    black_agent = Agent("black")
-
-    while True:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                return
-
-        board.render()
-        clock.tick(60)
-
-        if board.turn == "red":
-            red_agent.move(board)
-        else:
-            black_agent.move(board)
-        
-        print(board.get_board())
-
-        board.turn = "black" if board.turn == "red" else "red"
-        board.check_win()
+    board.get_all_moves()
 
 if __name__ == "__main__":
     main()
