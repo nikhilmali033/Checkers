@@ -304,7 +304,7 @@ class Board:
 
 
 def main():
-    epochs=160000
+    epochs = 680000
     p1 = Player("B")
     p2 = Player("R")
     board = Board(p1, p2)
