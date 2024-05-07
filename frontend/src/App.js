@@ -6,7 +6,7 @@ import { faCrown } from "@fortawesome/free-solid-svg-icons";
 import { io, socket } from "./socket";
 
 const init = new Checkers();
-socket.connect();
+//socket.connect();
 
 function App() {
   const [active, setActive] = useState(null);
@@ -37,6 +37,8 @@ function App() {
       setActive(null); // Reset active state after the move
     }
   };
+
+  socket.on("game_status", (data) => {});
 
   return (
     <div className="App">
@@ -82,6 +84,19 @@ function App() {
               </div>
             );
           })}
+          <div className="moves-cont">
+            <div className="move-header">Move History</div>
+            <div className="move-list">
+              {game.moveHistory.map((x) => {
+                return (
+                  <div className="move-item" key={x.move}>
+                    <div>{x.move}</div>
+                    <div>{x.captured} Pieces Captured</div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
       </header>
     </div>

@@ -9,12 +9,14 @@ class Player:
             self.exp_rate = exp_rate
             # self.decay_gamma = 0.9
             self.estimations = dict()  # state -> value
+            self.loadPolicy()
 
     def feedState(self, state):
         self.states.append(state)
 
-    def setSymbol(self, symbol):
-        self.symbol = symbol
+
+    def reset(self):
+        self.states = []
 
     def chooseAction(self, positions):
         if np.random.uniform(0, 1) <= self.exp_rate:

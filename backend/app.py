@@ -1,5 +1,6 @@
 import eventlet
 import socketio
+from checkers import *
 
 sio = socketio.Server(cors_allowed_origins='http://localhost:3000')
 app = socketio.WSGIApp(sio, static_files={

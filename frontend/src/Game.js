@@ -6,6 +6,7 @@ export class Checkers {
   pieces = {};
   board = [];
   turn = 0; //black is 0, red is 1
+  moveHistory = [];
 
   constructor(board = [], pieces = {}, turn = 0) {
     if (board.length === 0) {
@@ -36,14 +37,14 @@ export class Checkers {
     }
   }
 
-  createPiece(x, y, isBlack = false) {
+  createPiece(x, y, isBlack = false, isKing = false) {
     const id = uuidv4();
     this.pieces[id] = {
       id,
       x,
       y,
-      isBlack: isBlack,
-      isKing: false,
+      isBlack,
+      isKing,
     };
     return id;
   }
@@ -192,6 +193,15 @@ export class Checkers {
     return { validMoves, moveInfo };
   }
 
+  recordMove(x0, y0, x1, y1, captured = []) {
+    let player = this.turn == 0 ? "Black" : "Red";
+    let obj = {
+      move: `${player} moved from (${x0}, ${y0}) to (${x1}, ${y1})`,
+      captured: `${captured.length}`,
+    };
+    this.moveHistory.push(obj);
+  }
+
   movePiece(space, id, info) {
     const piece = this.pieces[id];
     const lastSpace = this.board.find((x) => x.piece === id);
@@ -200,6 +210,13 @@ export class Checkers {
     if (Math.abs(dx) === 2) {
       const dy = this.board[space].y - lastSpace.y;
     }
+    this.recordMove(
+      lastSpace.x,
+      lastSpace.y,
+      this.board[space].x,
+      this.board[space].y,
+      info.captures
+    );
     this.board[space].piece = id;
     piece.x = this.board[space].x;
     piece.y = this.board[space].y;
@@ -237,5 +254,31 @@ export class Checkers {
       else arr[x].push("");
     });
     return arr;
+  }
+
+  loadBoard(board) {
+    const flat = board.flat();
+    this.pieces = {};
+    flat.forEach((x, i) => {
+      if (x === "") this.board[i].piece = "";
+      else if (x === "R")
+        this.board[i].piece = this.createPiece(i % 8, Math.floor(i / 8));
+      else if (x === "RK")
+        this.board[i].piece = this.createPiece(
+          i % 8,
+          Math.floor(i / 8),
+          false,
+          true
+        );
+      else if (x === "B")
+        this.board[i].piece = this.createPiece(i % 8, Math.floor(i / 8), true);
+      else if (x === "BK")
+        this.board[i].piece = this.createPiece(
+          i % 8,
+          Math.floor(i / 8),
+          true,
+          true
+        );
+    });
   }
 }

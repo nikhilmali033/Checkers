@@ -209,6 +209,8 @@ class Board:
         self.selected_piece = None
         self.turn = "red"
         self.initialize_board()
+        self.p1.reset()
+        self.p2.reset()
 
     def get_all_moves(self):
         actions = []
@@ -221,7 +223,7 @@ class Board:
                     cur.is_king = True
 
                 moves = self.get_captures_by_move(cur)
-                print(moves)
+                #print(moves)
                 for pos, captured in moves.items():
                     # print(f"Moved Piece {index} to {pos}")
                     next_state = self.get_next_state(cur, pos, captured)
@@ -258,8 +260,9 @@ class Board:
             else:
                 self.current_player = self.p1
                 
-            print(f"It's {self.current_player.symbol}'s turn.")
+            #print(f"It's {self.current_player.symbol}'s turn.")
             moves = self.get_all_moves()
+            #If not possible moves (stuck)
             if len(moves) == 0:
                 #forfit to other player
                 if self.current_player == self.p1:
@@ -270,13 +273,10 @@ class Board:
                 if self.feedback:
                     self.giveReward(self.winner)
                 return self.winner
-
-            
             
             hash, next_state = self.current_player.chooseAction(moves)
 
-        
-            print(next_state)
+            #print(next_state)
             self.board = next_state
             isEnd, winner = self.check_win()
             self.feedCurrentState() 
@@ -291,14 +291,27 @@ class Board:
 
 
 def main():
+    epochs=20000
     p1 = Player("B")
     p2 = Player("R")
     board = Board(p1, p2)
-    winner = board.play()
-    if winner == 'Tie':
-        print("Game ended in a Tie")
-    else:
-        print(f"{winner} Won!")
+    player1Win = 0.0
+    player2Win = 0.0
+    for i in range(0, epochs):
+        print("Game: ", i)
+        winner = board.play()
+        if winner == 'Tie':
+            print("Game ended in a Tie")
+        else:
+            if winner == 'B':
+                player1Win += 1
+            if winner == 'R':
+                player2Win += 1
+            print(f"{winner} Won!")
+    print(player1Win / epochs)
+    print(player2Win / epochs)
+    p1.savePolicy()
+    p2.savePolicy()
     
 
 if __name__ == "__main__":
