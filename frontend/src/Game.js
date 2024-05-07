@@ -8,7 +8,7 @@ export class Checkers {
   turn = 0; //black is 0, red is 1
   moveHistory = [];
 
-  constructor(board = [], pieces = {}, turn = 0) {
+  constructor(board = [], pieces = {}, moveHistory = [], turn = 0) {
     if (board.length === 0) {
       let sqrs = [];
       for (let i = 0; i < sqrCnt; i++) {
@@ -35,6 +35,7 @@ export class Checkers {
       this.pieces = pieces;
       this.turn = turn;
     }
+    this.moveHistory = moveHistory;
   }
 
   createPiece(x, y, isBlack = false, isKing = false) {
@@ -206,10 +207,6 @@ export class Checkers {
     const piece = this.pieces[id];
     const lastSpace = this.board.find((x) => x.piece === id);
     lastSpace.piece = null;
-    const dx = this.board[space].x - lastSpace.x;
-    if (Math.abs(dx) === 2) {
-      const dy = this.board[space].y - lastSpace.y;
-    }
     this.recordMove(
       lastSpace.x,
       lastSpace.y,
@@ -231,7 +228,10 @@ export class Checkers {
       });
     }
     const processed = this.processBoard();
-    socket.emit("game_status", processed);
+    socket.emit("request_move", {
+      data: processed,
+      turn: this.turn === 0 ? "B" : "R",
+    });
   }
 
   pieceTurn(id) {

@@ -25,8 +25,8 @@ class Player:
             action = positions[idx]
         else:
             values = []
-            for hash, state in positions:
-                values.append((self.estimations.get(hash, 0), state))
+            for hash, state, move, captured in positions:
+                values.append((self.estimations.get(hash, 0), state, move, captured))
             np.random.shuffle(values)
             values.sort(key=lambda x: x[0], reverse=True)
             action = values[0]

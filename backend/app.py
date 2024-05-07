@@ -7,6 +7,10 @@ app = socketio.WSGIApp(sio, static_files={
     '/': {'content_type': 'text/html', 'filename': 'index.html'}
 })
 
+p1 = Player("B")
+p2 = Player("R")
+board = Board(p1, p2)
+
 @sio.event
 def connect(sid, environ):
     print('connect ', sid)
@@ -16,9 +20,12 @@ def connect(sid, environ):
 def my_message(sid, data):
     print('message ', data)
 
-@sio.on('game_status')
+@sio.on('request_move')
 def another_event(sid, data):
-    print(data)
+    state = data["data"]
+    turn = data["turn"]
+    state, move, captured = board.request_move(state, turn)
+    sio.emit("game_status", {'state': state, 'move': move, 'captured': captured})
 
 @sio.event
 def disconnect(sid):

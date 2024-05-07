@@ -230,7 +230,9 @@ class Board:
                     hash = self.get_hash(next_state)
                     # print(hash)
                     # print(next_state)
-                    actions.append((hash, next_state))
+                    sCol = "Red" if "R" in piece else "Black"
+                    move = f"{sCol} moved from {(index[1], index[0])} to {(pos[1], pos[0])}"
+                    actions.append((hash, next_state, move, captured))
             
         return actions
     
@@ -248,6 +250,16 @@ class Board:
         else:
             self.p1.feedReward(0.1)  # small reward if draw
             self.p2.feedReward(0.1)
+
+    def request_move(self, state, turn):
+        self.board = np.array(state, dtype='U2')
+        if turn == self.p1.symbol:
+            self.current_player = self.p1
+        else:
+            self.current_player = self.p2
+        moves = self.get_all_moves()
+        hash, next_state, move, captured = self.current_player.chooseAction(moves)
+        return next_state.tolist(), move, captured
 
 
     def play(self):
@@ -274,7 +286,7 @@ class Board:
                     self.giveReward(self.winner)
                 return self.winner
             
-            hash, next_state = self.current_player.chooseAction(moves)
+            hash, next_state, move, captured = self.current_player.chooseAction(moves)
 
             #print(next_state)
             self.board = next_state
@@ -290,29 +302,29 @@ class Board:
             rounds = rounds + 1
 
 
-def main():
-    epochs=20000
-    p1 = Player("B")
-    p2 = Player("R")
-    board = Board(p1, p2)
-    player1Win = 0.0
-    player2Win = 0.0
-    for i in range(0, epochs):
-        print("Game: ", i)
-        winner = board.play()
-        if winner == 'Tie':
-            print("Game ended in a Tie")
-        else:
-            if winner == 'B':
-                player1Win += 1
-            if winner == 'R':
-                player2Win += 1
-            print(f"{winner} Won!")
-    print(player1Win / epochs)
-    print(player2Win / epochs)
-    p1.savePolicy()
-    p2.savePolicy()
+# def main():
+#     epochs=20000
+#     p1 = Player("B")
+#     p2 = Player("R")
+#     board = Board(p1, p2)
+#     player1Win = 0.0
+#     player2Win = 0.0
+#     for i in range(0, epochs):
+#         print("Game: ", i)
+#         winner = board.play()
+#         if winner == 'Tie':
+#             print("Game ended in a Tie")
+#         else:
+#             if winner == 'B':
+#                 player1Win += 1
+#             if winner == 'R':
+#                 player2Win += 1
+#             print(f"{winner} Won!")
+#     print(player1Win / epochs)
+#     print(player2Win / epochs)
+#     p1.savePolicy()
+#     p2.savePolicy()
     
 
-if __name__ == "__main__":
-    main()
+# if __name__ == "__main__":
+#     main()

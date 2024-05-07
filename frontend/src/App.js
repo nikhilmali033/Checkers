@@ -6,7 +6,7 @@ import { faCrown } from "@fortawesome/free-solid-svg-icons";
 import { io, socket } from "./socket";
 
 const init = new Checkers();
-//socket.connect();
+socket.connect();
 
 function App() {
   const [active, setActive] = useState(null);
@@ -28,7 +28,7 @@ function App() {
 
   useEffect(() => {
     // Update the component whenever game state changes
-    setGame(new Checkers(game.board, game.pieces)); // Assuming Checkers has a constructor that accepts board and pieces
+    setGame(new Checkers(game.board, game.pieces, game.moveHistory)); // Assuming Checkers has a constructor that accepts board and pieces
   }, []);
 
   const handleSquareClick = (coord, id) => {
@@ -38,7 +38,16 @@ function App() {
     }
   };
 
-  socket.on("game_status", (data) => {});
+  socket.off("game_status").on("game_status", (data) => {
+    console.log(data);
+    let state = data.state;
+    game.loadBoard(state);
+    game.moveHistory.push({
+      move: data.move,
+      captured: data.captured.length,
+    });
+    setGame(new Checkers(game.board, game.pieces, game.moveHistory));
+  });
 
   return (
     <div className="App">
