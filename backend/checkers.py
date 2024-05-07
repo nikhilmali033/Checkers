@@ -1,6 +1,7 @@
 import numpy as np
 import math
 from player import Player
+import time
 
 class Piece:
     def __init__(self, color, position):
@@ -303,14 +304,15 @@ class Board:
 
 
 def main():
-    epochs=40000
+    epochs=160000
     p1 = Player("B")
     p2 = Player("R")
     board = Board(p1, p2)
     player1Win = 0.0
     player2Win = 0.0
+    start_time = time.time()  # Start the timer
     for i in range(0, epochs):
-        print("Game: ", i)
+        #print("Game: ", i)
         winner = board.play()
         if winner == 'Tie':
             print("Game ended in a Tie")
@@ -319,7 +321,10 @@ def main():
                 player1Win += 1
             if winner == 'R':
                 player2Win += 1
-            print(f"{winner} Won!")
+            #print(f"{winner} Won!")
+        if i % 1000 == 0 and i > 0:  # Every 1000 epochs
+            elapsed_time = time.time() - start_time  # Calculate elapsed time
+            print(f"Time elapsed after {i} epochs: {elapsed_time} seconds")
     print(player1Win / epochs)
     print(player2Win / epochs)
     p1.savePolicy()
