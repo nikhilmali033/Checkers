@@ -283,7 +283,7 @@ class Board:
         else:
             self.current_player = self.p2
         moves = self.get_all_moves()
-        hash, next_state, move, captured = self.current_player.chooseAction(moves)
+        hash, next_state, move, captured, king_move = self.current_player.chooseAction(moves)
         return next_state.tolist(), move, captured
 
 
@@ -308,7 +308,7 @@ class Board:
                     self.winner = 'B'
                 self.end = True
                 if self.feedback:
-                    self.giveReward(self.winner, True)
+                    self.giveReward(self.winner) #, True ?
                 return self.winner
             
             hash, next_state, move, captured, king_move = self.current_player.chooseAction(moves)
@@ -321,7 +321,7 @@ class Board:
             self.feedCurrentState() 
             if isEnd:
                 if self.feedback:
-                    self.giveReward(winner, True)
+                    self.giveReward(winner) #, True ?
                 return winner
             if rounds > 500:
                 print("Game ended in a Tie (500 rounds played without a winner)")
@@ -330,7 +330,7 @@ class Board:
 
 
 def main():
-    epochs=160000
+    epochs = 80000
     p1 = Player("B")
     p2 = Player("R")
     board = Board(p1, p2)
