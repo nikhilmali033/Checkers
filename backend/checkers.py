@@ -259,11 +259,17 @@ class Board:
         if count != 0:
             reward_size = count * 0.075
             if self.current_player == self.p1:
-                self.p1.feedReward(reward_size)
+                if king_move:
+                    self.p1.feedReward(reward_size + 0.05)
+                else:
+                    self.p1.feedReward(reward_size)
                 self.p2.feedReward(reward_size * -0.3)
             else:
                 self.p1.feedReward(reward_size * -0.3)
-                self.p2.feedReward(reward_size)
+                if king_move:
+                    self.p2.feedReward(reward_size + 0.05)
+                else:
+                    self.p2.feedReward(reward_size)
         else:
             if king_move:
                 self.current_player.feedReward(0.05)
