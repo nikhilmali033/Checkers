@@ -161,6 +161,7 @@ class Board:
         next_state = self.board.copy()
         old_position = piece.position
         next_state[old_position[0], old_position[1]] = ''
+        king_move = False
 
         # Remove the captured pieces
         for piec in captured_pieces:
@@ -170,14 +171,16 @@ class Board:
         # Promote to king if a piece reaches the end of the board
         if piece.color == "red" and new_position[0] == 0:
             piece.is_king = True
+            king_move = True
 
 
         elif piece.color == "black" and new_position[0] == 7:
             piece.is_king = True
+            king_move = True
 
         # Place the piece in the new position
         next_state[new_position[0], new_position[1]] = str(piece)
-        return next_state
+        return (next_state, king_move)
 
 
     def check_win(self):
@@ -227,13 +230,13 @@ class Board:
                 #print(moves)
                 for pos, captured in moves.items():
                     # print(f"Moved Piece {index} to {pos}")
-                    next_state = self.get_next_state(cur, pos, captured)
+                    next_state, king_move = self.get_next_state(cur, pos, captured)
                     hash = self.get_hash(next_state)
                     # print(hash)
                     # print(next_state)
                     sCol = "Red" if "R" in piece else "Black"
                     move = f"{sCol} moved from {(index[1], index[0])} to {(pos[1], pos[0])}"
-                    actions.append((hash, next_state, move, captured))
+                    actions.append((hash, next_state, move, captured, king_move))
             
         return actions
     
@@ -252,17 +255,20 @@ class Board:
             self.p1.feedReward(0.1)  # small reward if draw
             self.p2.feedReward(0.1)
 
-    def intermediary_reward(self, count):
+    def intermediary_reward(self, count, king_move):
         if count != 0:
             reward_size = count * 0.075
             if self.current_player == self.p1:
                 self.p1.feedReward(reward_size)
-                self.p2.feedReward(reward_size * -1)
+                self.p2.feedReward(reward_size * -0.3)
             else:
-                self.p1.feedReward(reward_size * -1)
+                self.p1.feedReward(reward_size * -0.3)
                 self.p2.feedReward(reward_size)
         else:
-            self.current_player.feedReward(-0.005)
+            if king_move:
+                self.current_player.feedReward(0.05)
+            else:
+                self.current_player.feedReward(-0.005)
 
     def request_move(self, state, turn):
         self.board = np.array(state, dtype='U2')
@@ -299,8 +305,8 @@ class Board:
                     self.giveReward(self.winner, True)
                 return self.winner
             
-            hash, next_state, move, captured = self.current_player.chooseAction(moves)
-            self.intermediary_reward(len(captured))
+            hash, next_state, move, captured, king_move = self.current_player.chooseAction(moves)
+            self.intermediary_reward(len(captured), king_move)
 
 
             #print(next_state)
