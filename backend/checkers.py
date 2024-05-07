@@ -252,6 +252,18 @@ class Board:
             self.p1.feedReward(0.1)  # small reward if draw
             self.p2.feedReward(0.1)
 
+    def intermediary_reward(self, count):
+        if count != 0:
+            reward_size = count * 0.075
+            if self.current_player == self.p1:
+                self.p1.feedReward(reward_size)
+                self.p2.feedReward(reward_size * -1)
+            else:
+                self.p1.feedReward(reward_size * -1)
+                self.p2.feedReward(reward_size)
+        else:
+            self.current_player.feedReward(-0.005)
+
     def request_move(self, state, turn):
         self.board = np.array(state, dtype='U2')
         if turn == self.p1.symbol:
@@ -284,10 +296,12 @@ class Board:
                     self.winner = 'B'
                 self.end = True
                 if self.feedback:
-                    self.giveReward(self.winner)
+                    self.giveReward(self.winner, True)
                 return self.winner
             
             hash, next_state, move, captured = self.current_player.chooseAction(moves)
+            self.intermediary_reward(len(captured))
+
 
             #print(next_state)
             self.board = next_state
@@ -295,7 +309,7 @@ class Board:
             self.feedCurrentState() 
             if isEnd:
                 if self.feedback:
-                    self.giveReward(winner)
+                    self.giveReward(winner, True)
                 return winner
             if rounds > 500:
                 print("Game ended in a Tie (500 rounds played without a winner)")

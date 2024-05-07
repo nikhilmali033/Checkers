@@ -33,7 +33,7 @@ class Player:
         # print("{} takes action {}".format(self.name, action))
         return action
     
-    def feedReward(self, reward):
+    def feedReward(self, reward, final=False):
         if len(self.states) == 0:
             return
         target = reward
@@ -41,7 +41,8 @@ class Player:
             value = self.estimations.get(latestState, 0) + self.lr * (target - self.estimations.get(latestState, 0))
             self.estimations[latestState] = value
             target = value
-        self.states = []
+        if final:
+            self.states = []
 
     def savePolicy(self):
         fw = open('optimal_policy_' + str(self.symbol), 'wb')
